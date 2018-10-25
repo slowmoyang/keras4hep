@@ -8,7 +8,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 import tensorflow.keras.backend as K
-from tensorflow.keras.layers.core import Lambda
+from tensorflow.keras.layers import Lambda
 from tensorflow.keras.models import Sequential
 
 try:

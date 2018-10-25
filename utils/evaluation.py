@@ -6,10 +6,10 @@ import os
 import numpy as np
 import pandas as pd
 
-from keras4hep.utils import get_log_dir
-from keras4hep.utils import Directory
-from keras4hep.utils import get_filename
-from keras4hep.utils import convert_str_to_number
+from keras4hep.utils.misc import Directory
+from keras4hep.utils.misc import get_log_dir
+from keras4hep.utils.misc import get_filename
+from keras4hep.utils.misc import convert_str_to_number
 
 
 
