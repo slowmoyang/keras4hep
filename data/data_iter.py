@@ -22,7 +22,7 @@ class DataIterator(object):
                  shuffle=False):
 
         self._dataset = dataset
-        self._batch_size = batch_size
+        self.batch_size = batch_size
         self.fit_generator_input = fit_generator_input
         self.fit_generator_mode = fit_generator_mode
         self._class_weight = class_weight
