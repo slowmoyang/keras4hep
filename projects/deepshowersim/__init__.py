@@ -1,1 +1,1 @@
-from __future__ import __init__
+from __future__ import absolute_import
