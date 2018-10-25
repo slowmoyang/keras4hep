@@ -124,10 +124,10 @@ class DataIterator(object):
         indices = list(indices)
         return indices
 
+    # FIXME Move this method to utils or dataset
     def get_shape(self, key, batch_shape=False):
         shape = self._dataset[:1][key].shape[1:]
         if batch_shape:
             return (self._batch_size, ) + shape
         else:
-            return shape
-        
+            return shape 
