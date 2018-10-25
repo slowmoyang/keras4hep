@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 import warnings
 
 import numpy as np
@@ -14,14 +15,19 @@ class DataIterator(object):
     def __init__(self,
                  dataset,
                  batch_size,
+                 fit_generator_input=None, # use {"x": ["x"], "y": ["y"]}
+                 fit_generator_mode=False,
+                 class_weight=None,
                  cyclic=False,
                  shuffle=False):
 
         self._dataset = dataset
         self._batch_size = batch_size
+        self.fit_generator_input = fit_generator_input
+        self.fit_generator_mode = fit_generator_mode
+        self._class_weight = class_weight
         self._cyclic = cyclic
         self._shuffle = shuffle
-
 
         self._num_examples = len(self._dataset)
 
@@ -37,16 +43,6 @@ class DataIterator(object):
 
         self._start = 0
 
-    @property
-    def batch_size(self):
-        return self._batch_size
-
-    @batch_size.setter
-    def batch_size(self, size):
-        if size <= 0:
-            raise ValueError
-        self._batch_size = size
-
     def __len__(self):
         # TODO
         if self._cyclic:
@@ -56,11 +52,12 @@ class DataIterator(object):
         num_batches = int(np.ceil(self._num_examples / self._batch_size))
         return num_batches
 
-    def __getitem__(self, key):
-        return self._dataset[key]
-
     def __next__(self):
-        return self._next()
+        batch = self._next()
+        if self._fit_generator_mode:
+            return self._get_fit_generator_batch(batch)
+        else:
+            return batch
 
     # NOTE python2 support
     next = __next__
@@ -73,7 +70,7 @@ class DataIterator(object):
         slicing = slice(self._start, end)
         self._start = end
 
-        batch = self[slicing]
+        batch = self._dataset[slicing]
         return batch
 
     def _acyclic_shuffle_next(self):
@@ -86,7 +83,7 @@ class DataIterator(object):
         slicing = [self._indices.pop() for _ in range(self._start, end)]
         self._start = end
 
-        batch = self[slicing]
+        batch = self._dataset[slicing]
         return batch
 
     def _cyclic_next(self):
@@ -96,20 +93,20 @@ class DataIterator(object):
 
             if end <= self._num_examples:
                 self._start = end
-                batch = self[slicing]
+                batch = self._dataset[slicing]
                 return batch
             else:
-                batch = self[slicing]
+                batch = self._dataset[slicing]
                 self._start = 0
                 end = self._batch_size - len(batch)
-                batch1 = self[slice(self._start, end)]
+                batch1 = self._dataset[slice(self._start, end)]
                 self._start = end
                 batch += batch1
                 return batch
         else:
             self._start = 0
             end = self._start + self._batch_size
-            batch = self[slice(self._start, end)]
+            batch = self._dataset[slice(self._start, end)]
             self._start = end
             return batch
 
@@ -131,3 +128,54 @@ class DataIterator(object):
             return (self._batch_size, ) + shape
         else:
             return shape 
+
+    def _get_fit_generator_batch(self, batch):
+        x = [batch[each] for each in self._fit_generator_input["x"]]
+        y = [batch[each] for each in self._fit_generator_input["y"]]
+        if self._class_weight is None:
+            return (x, y)
+        else:
+            return (x, y, self._class_weight)
+
+    @property
+    def batch_size(self):
+        return self._batch_size
+
+    @batch_size.setter
+    def batch_size(self, size):
+        if size <= 0:
+            raise ValueError
+        self._batch_size = size
+
+    @property
+    def fit_generator_input(self):
+        return self._fit_generator_input
+
+    @fit_generator_input.setter
+    def fit_generator_input(self, input_names):
+        if input_names is None:
+            input_names = {"x": ["x"], "y": ["y"]}
+        elif isinstance(input_names, dict):
+            for key in ["x", "y"]:
+                if not input_names.has_key(key):
+                    raise ValueError
+
+                if isinstance(input_names[key], str):
+                    input_names[key] = [input_names.pop(key)]
+                elif not isinstance(input_names[key], collections.Sequence):
+                    raise TypeError
+        else:
+            # TODO allow sequence
+            raise TypeError
+
+        self._fit_generator_input = input_names
+
+    @property
+    def fit_generator_mode(self):
+        return self._fit_generator_mode
+
+    @fit_generator_mode.setter
+    def fit_generator_mode(self, mode):
+        if not isinstance(mode, bool):
+            raise TypeError
+        self._fit_generator_mode = mode
