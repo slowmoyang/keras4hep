@@ -5,7 +5,7 @@ from __future__ import print_function
 import numpy as np
 
 
-from keras.engine.training import Model
+from tensorflow.python.keras.engine.training import Model
 
 
 class BayesianModel(Model):

@@ -2,11 +2,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import keras.backend as K
-from keras import initializers
-from keras.engine import InputSpec
-from keras.layers import Dropout
-from keras.layers import Wrapper
+import tensorflow as tf
+import tensorflow.keras.backend as K
+from tensorflow.keras import initializers
+from tensorflow.keras.layers import Dropout
+from tensorflow.keras.layers import Wrapper
+from tensorflow.python.keras.engine import InputSpec
 
 import numpy as np
 
