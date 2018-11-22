@@ -12,32 +12,37 @@ import warnings
 import tensorflow.keras.backend as K
 from tensorflow.python.client import device_lib
 
+
 class Directory(object):
-    def __init__(self, path, creation=True):
-        self.path = path
-        self._creation = creation
-        if self._creation:
+    def __init__(self, path, create=True):
+        self._path = path
+        self._create = create
+        if self._create:
             os.makedirs(self.path)
 
-    def make_subdir(self, name):
-        path = os.path.join(self.path, name)
-        setattr(self, name, Directory(path, creation=self._creation))
+    @property
+    def path(self):
+        return self._path
+
+    @path.setter
+    def path(self, path_):
+        if not isinstance(path_, str):
+            raise TypeError
+        self._path = path_
+
+    def mkdir(self, name):
+        path = os.path.join(self._path, name)
+        setattr(self, name, Directory(path, create=self._create))
 
     def get_entries(self, full_path=True):
         entries = os.listdir(self.path)
         if full_path:
-            entries = map(lambda each: os.path.join(self.path, each), entries)
+            entries = [os.path.join(self._path, each) for each in entries]
         return entries
 
-def get_log_dir(path, creation=True):
-    # mkdir
-    log = Directory(path, creation=creation)
-    log.make_subdir('validation')
-    log.make_subdir('saved_models')
-    log.make_subdir('roc')
-    log.make_subdir('output_histogram')
-    log.make_subdir("heatmap")
-    return log
+    def concat(self, name):
+        return os.path.join(self._path, name)
+
 
 def get_dataset_paths(dpath):
     entries = os.listdir(dpath)
