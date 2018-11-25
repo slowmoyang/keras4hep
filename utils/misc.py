@@ -8,6 +8,12 @@ import json
 import argparse
 import numpy as np
 import warnings
+import glob
+import pandas as pd
+import logging
+import sys
+import re
+
 
 import tensorflow.keras.backend as K
 from tensorflow.python.client import device_lib
@@ -108,8 +114,90 @@ def get_filename(path):
     return os.path.splitext(os.path.split(path)[-1])[0]
 
 
-def convert_str_to_number(string):
-    float_case = float(string)
-    int_case = int(float_case)
-    output = int_case if float_case == int_case else float_case
-    return output
+def is_float(string):
+    if not isinstance(string, str):
+        raise TypeError
+    return re.match("^\d+?\.\d+?$", string) is not None
+
+
+def convert_str_to_number(string, warning=True):
+    if not isinstance(string, str):
+        raise TypeError
+
+    if is_float(string):
+        return float(string)
+    elif string.isdigit():
+        return int(string)
+    else:
+        if warning:
+            warnings.warn("'{}' is neither 'float' nor 'int'".format(string),
+                          UserWarning)
+        return string
+
+
+def get_logger(name, path):
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+
+    format_str = '[%(asctime)s] %(message)s'
+    date_format = '%Y-%m-%d %H:%M:%S'
+    formatter = logging.Formatter(format_str, date_format)
+
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
+
+    file_handler = logging.FileHandler(path)
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+    return logger
+
+
+def parse_str(string, target=None):
+    data = string.split("_")
+    data = [each.split("-") for each in data if "-" in each]
+    data = {key: convert_str_to_number(value) for key, value in data}
+    if target is None:
+        return data
+    else:
+        return data[target]
+
+
+def parse_stringized_data(data):
+    data = [each.split("-") for each in data]
+    data = {key: convert_str_to_number(value, warning=False) for (key, value) in data}
+    return data
+
+
+def find_good_checkpoint(directory,
+                    which={"max": ["auc"], "min": ["loss"]},
+                    verbose=True,
+                    extension=".hdf5"):
+    """
+    path: '/path/to/directory/<MODEL NAME>_loss-0.2345_<KEY>-<VALUE>.pth.tar'
+    """
+    def _parse_path(path): 
+        basename = os.path.basename(path)
+        basename = basename.rstrip(".hdf5")
+        metadata = basename.split("_")[1:]
+        metadata = [each.split("-") for each in metadata]
+        metadata = {key: convert_str_to_number(value, warning=False) for (key, value) in metadata}
+        metadata["path"] = path
+        return metadata
+
+    entries = glob.glob(os.path.join(directory, "*{}".format(extension)))
+    entries = [_parse_path(each) for each in entries if each.endswith(extension)]
+    df = pd.DataFrame(entries)
+
+    good_models = []
+    for each in which["max"]:
+        path = df.loc[df[each].idxmax()]["path"]
+        good_models.append(path)
+        if verbose:
+            print("Max {}: {}".format(each, path))
+    for each in which["min"]:
+        good_models.append(df.loc[df[each].idxmin()]["path"])
+        if verbose:
+            print("Min {}: {}".format(each, path))
+    good_models = list(set(good_models))
+    return good_models        
