@@ -18,7 +18,7 @@ class DataIterator(object):
                  fit_generator_input=None, # use {"x": ["x"], "y": ["y"]}
                  fit_generator_mode=False,
                  class_weight=None,
-                 cyclic=False,
+                 cycle=False,
                  shuffle=False):
 
         self._dataset = dataset
@@ -26,28 +26,21 @@ class DataIterator(object):
         self.fit_generator_input = fit_generator_input
         self.fit_generator_mode = fit_generator_mode
         self._class_weight = class_weight
-        self._cyclic = cyclic
+
+        self._cycle = cycle
         self._shuffle = shuffle
 
         self._num_examples = len(self._dataset)
-
-        if cyclic:
-            self._next = self._cyclic_next
-        else:
-            if shuffle:
-                self._indices = self._get_shuffled_indices()
-                self._next = self._acyclic_shuffle_next
-            else:
-                self._next = self._acyclic_next
-
-
         self._start = 0
+
+        self._set_mode_of_next()
+
 
     def __len__(self):
         # TODO
-        if self._cyclic:
+        if self._cycle:
             warnings.warn(
-                "cyclic mode... length is # of batches per a epoch",
+                "cycle mode... length is # of batches per a epoch",
                 Warning)
         num_batches = int(np.ceil(self._num_examples / self._batch_size))
         return num_batches
@@ -179,3 +172,36 @@ class DataIterator(object):
         if not isinstance(mode, bool):
             raise TypeError
         self._fit_generator_mode = mode
+
+    @property
+    def cycle(self):
+        return self._cycle
+
+    @cycle.setter
+    def cycle(self, cycle_):
+        if not isinstance(cycle_, bool):
+            raise TypeError
+        self._cycle = cycle_
+        self._set_mode_of_next()
+
+    @property
+    def shuffle(self):
+        return self._shuffle
+
+    @shuffle.setter
+    def shuffle(self, shuffle_):
+        if not isinstance(shuffle_, bool):
+            raise TypeError
+        self._shuffle = shuffle_
+        self._set_mode_of_next()
+       
+    def _set_mode_of_next(self):
+        if self._cycle:
+            self._next = self._cyclic_next
+        else:
+            if self._shuffle:
+                self._indices = self._get_shuffled_indices()
+                self._next = self._acyclic_shuffle_next
+            else:
+                self._next = self._acyclic_next
+
