@@ -16,10 +16,10 @@ from tensorflow.keras.layers import Concatenate
 from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import GlobalAveragePooling2D
-from tensorflow.python.keras.layers import Layer
+from tensorflow.keras.layers import Input 
+from tensorflow.keras.models import Model
 
-from keras4hep.projects.qgjets.layers import layer_utils
-from keras4hep.projects.qgjets.layers.layer_utils import conv_unit
+from keras4hep.projects.qgjets.models.image import layer_utils
 
 
 """
@@ -46,7 +46,7 @@ def bottleneck_layer(x, filters, activation="relu", **kargs):
     H_l(.), as DenseNet-B. In our experiments, we let each
     1X1 convolution produce 4k feature-maps
     """        
-    x = conv_unit(
+    x = layer_utils.conv_unit(
         x,
         filters=4*filters,
         kernel_size=1,
@@ -54,7 +54,7 @@ def bottleneck_layer(x, filters, activation="relu", **kargs):
         order=["bn", "activation", "conv"],
         **kargs)
 
-    x = conv_unit(
+    x = layer_utils.conv_unit(
         x,
         filters=filters,
         kernel_size=3,
@@ -117,7 +117,7 @@ def dense_block(x,
                 activation=activation,
                 **kargs)
         else:
-            x_i = conv_unit(
+            x_i = layer_utils.conv_unit(
                 x=x,
                 filters=growth_rate,
                 kernel_size=(3, 3),
@@ -129,33 +129,63 @@ def dense_block(x,
 
     return x
 
-def _test():
-    from tensorflow.keras.layers import Input
-    from tensorflow.keras.models import Model
-    from tensorflow.keras.utils import plot_model
 
-    inputs = Input((3, 224, 224))
+def build_a_model(input_shape,
+                  num_classes=2,
+                  growth_rate=12, # k
+                  theta=0.5, # compression_factor
+                  num_layers_list=[6, 12, 32, 32],
+                  use_bottleneck=True,
+                  init_filters=None,
+                  activation="relu"):
+    """
+    Args:
+      input_shape: 'tuple', (channels, height, width).
+      num_classes: 'int'. Default is 2.
+      grwoth_rate: 'int'
+    """
 
-    growth_rate = 12
-    theta = 0.5
-    num_layers_list = [4, 4, 4]
+    if init_filters is None:
+        if use_bottleneck and theta == 1:
+            init_filters = 2 * grwoth_rate
+        else:
+            init_filters = 16
 
-    # Before entering the first dense block, a convolution
-    # with 16 (or twice the growth rate for DenseNet-BC)
-    # output channels is performed on the input images.
-    out = Conv2D(filters=2*growth_rate, kernel_size=5, strides=2)(inputs)
-    for i, n in enumerate(num_layers_list[:-1]):
-        out = dense_block(out, num_layers=n, growth_rate=growth_rate)
-        out = transition_layer(out, theta)
+    # (B, C, 33, 33)
+    inputs = Input(input_shape)
 
-    out = dense_block(out, num_layers=num_layers_list[-1], growth_rate=growth_rate)
+    # (B, C, 17, 17) 
+    out = layer_utils.conv_unit(
+        inputs,
+        filters=init_filters,
+        kernel_size=7,
+        strides=2,
+        padding="SAME",
+        activation=activation,
+        order=["bn", "activation", "conv"])
 
-    out = BatchNormalization(axis=1)(out)
-    out = Activation("relu")(out)
+    num_blocks = len(num_layers_list)
+    for idx, num_layers in enumerate(num_layers_list, 1):
+        out = dense_block(out, num_layers, growth_rate, use_bottleneck, activation)
+        if idx  < num_blocks:
+            out = transition_layer(out, theta)
+
+    #At the end of the last dense block, a global average pooling is performed
+    # and then a softmax classifier is attached.
     out = GlobalAveragePooling2D()(out)
-    out = Dense(units=2)(out)
+    out = Dense(units=num_classes)(out)
+    out = Activation("softmax")(out)
 
     model = Model(inputs=inputs, outputs=out)
-
-    plot_model(model, to_file="/tmp/densenet.png", show_shapes=True)  
     return model
+
+
+def _test(path="/tmp/densenet.png"):
+    import os
+    from tensorflow.python.keras.utils import plot_model
+
+    model = build_a_model(
+        input_shape=(1,33,33),
+        num_classes=2)
+
+    plot_model(model, to_file=path, show_shapes=True)  
