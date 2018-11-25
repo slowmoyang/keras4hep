@@ -1,1 +1,5 @@
 from __future__ import absolute_import
+
+from keras4hep.projects.toptagging.roc_curve import ROCCurve
+from keras4hep.projects.toptagging.binary_classifier_response import BinaryClassifierResponse
+from keras4hep.projects.toptagging.learning_curve import LearningCurve
