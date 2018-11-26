@@ -19,7 +19,8 @@ class DataIterator(object):
                  fit_generator_mode=False,
                  class_weight=None,
                  cycle=False,
-                 shuffle=False):
+                 shuffle=False,
+                 drop_last=True):
 
         self._dataset = dataset
         self.batch_size = batch_size
@@ -31,6 +32,8 @@ class DataIterator(object):
         self._set_mode_of_next()
 
         self._class_weight = class_weight
+
+        self._drop_last = drop_last
 
 
 
@@ -63,6 +66,9 @@ class DataIterator(object):
             raise StopIteration
 
         end = self._start + self._batch_size
+        if end >= self._num_examples and self._drop_last:
+            raise StopIteration
+
         slicing = slice(self._start, end)
         self._start = end
 
@@ -75,7 +81,10 @@ class DataIterator(object):
 
         end = self._start + self._batch_size
         if end >= self._num_examples:
+            if self._drop_last:
+                raise StopIteration
             end = self._num_examples - 1
+
         slicing = [self._indices.pop() for _ in range(self._start, end)]
         self._start = end
 
