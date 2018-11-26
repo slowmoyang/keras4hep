@@ -24,9 +24,12 @@ class DataIterator(object):
         self._dataset = dataset
         self.batch_size = batch_size
         self.fit_generator_input = fit_generator_input
-        self.cycle = cycle or fit_generator_mode
-        self.shuffle = shuffle
-        self.fit_generator_mode = fit_generator_mode
+
+        self._cycle = cycle or fit_generator_mode
+        self._shuffle = shuffle
+        self._fit_generator_mode = fit_generator_mode
+        self._set_mode_of_next()
+
         self._class_weight = class_weight
 
 
@@ -34,7 +37,6 @@ class DataIterator(object):
         self._num_examples = len(self._dataset)
         self._start = 0
 
-        self._set_mode_of_next()
 
 
     def __len__(self):
