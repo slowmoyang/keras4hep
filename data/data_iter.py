@@ -24,11 +24,12 @@ class DataIterator(object):
         self._dataset = dataset
         self.batch_size = batch_size
         self.fit_generator_input = fit_generator_input
+        self.cycle = cycle or fit_generator_mode
+        self.shuffle = shuffle
         self.fit_generator_mode = fit_generator_mode
         self._class_weight = class_weight
 
-        self._cycle = cycle
-        self._shuffle = shuffle
+
 
         self._num_examples = len(self._dataset)
         self._start = 0
@@ -172,6 +173,11 @@ class DataIterator(object):
         if not isinstance(mode, bool):
             raise TypeError
         self._fit_generator_mode = mode
+        if mode:
+            warnings.warn(
+                "fit_generator_mode: cycle=True",
+                Warning)
+            self.cycle = True
 
     @property
     def cycle(self):
