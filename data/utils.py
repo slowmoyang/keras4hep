@@ -44,21 +44,21 @@ def get_class_weight(source, class_weight="balanced", label="label",
     else:
         tree = None
 
-    if tree is not None:
+    if tree is None:
         y = source
     else:
         y = [getattr(entry, label) for entry in tree]
 
     classes = np.unique(y)
 
-    class_weight = compute_class_weight(class_weight=class_weight, classes=classes, y=y)
+    class_weight_vect = compute_class_weight(class_weight=class_weight, classes=classes, y=y)
 
     if verbose:
         print("Finish off computing class weight")
-        for i, w in enumerate(class_weight):
+        for i, w in enumerate(class_weight_vect):
             print("{} th class: {:.4f}".format(i, w))
 
-    return class_weight
+    return class_weight_vect
             
 
  
