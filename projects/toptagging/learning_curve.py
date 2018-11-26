@@ -8,6 +8,7 @@ from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+from matplotlib.text import Text
 import pandas as pd
 from statsmodels.nonparametric.smoothers_lowess import lowess
 import ROOT
@@ -43,8 +44,8 @@ class LearningCurve(Callback):
         self._train.to_csv(self._train_csv_path)
         self._valid.to_csv(self._valid_csv_path)
 
-        for x, y, kwargs in self._booking_list:
-            self._draw(x, y, **kwargs)
+        for x, y, best in self._booking_list:
+            self._draw(x, y, best)
 
     def on_batch_begin(self, batch, logs=None):
         self._global_step += 1
@@ -78,15 +79,17 @@ class LearningCurve(Callback):
 
         self._valid.append(my_logs)
 
-    def book(self, y, x="step", **kwargs):
-        self._booking_list.append([x, y, kwargs])
+    def book(self, x, y, best):
+        self._booking_list.append([x, y, best])
 
-    def _draw(self, x, y, **kwargs):
+    def _draw(self, x, y, best):
         x_train = self._train[x].values
         y_train = self._train[y].values
 
         x_valid = self._valid[x].values
         y_valid = self._valid[y].values
+
+
 
         # NOTE LOWESS (locally weighted scatterplot smoothing)
         # https://www.statsmodels.org/dev/generated/statsmodels.nonparametric.smoothers_lowess.lowess.html
@@ -120,6 +123,31 @@ class LearningCurve(Callback):
             ls="--", lw=3,
             marker="^", markersize=10)
         ax.add_line(valid_curve)
+
+        if best == "max":
+            index = np.argmax(y_valid)
+        else: # min
+            index = np.argmin(y_valid)
+
+        x_best = x_valid[index]
+        y_best = y_valid[index]
+        best_epoch = self._valid["epoch"][index]
+
+        ax.text(x=x_best, y=y_best,
+                s="{:.4f} @ Epoch {:d}".format(y_best, best_epoch),
+                color="black")
+
+        vertical_line = Line2D(xdata=[x_best, x_best],
+                               ydata=[0, y_best],
+                               color="lightcoral", alpha=0.3, ls=":", lw=3)
+        ax.add_line(vertical_line)
+
+        horizontal_line = Line2D(xdata=[0, x_best],
+                                  ydata=[y_best, y_best],
+                                  color="lightcoral", alpha=0.3, ls=":", lw=3)
+        ax.add_line(horizontal_line)
+        
+
 
         ax.set_xlabel(x, fontdict={"size": 20})
         ax.set_ylabel(y, fontdict={"size": 20})
