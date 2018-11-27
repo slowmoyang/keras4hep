@@ -10,3 +10,4 @@ from keras4hep.data import utils
 from keras4hep.data.dataset import BaseTreeDataset 
 from keras4hep.data.data_iter import DataIterator
 from keras4hep.data.utils import get_batch_time
+from keras4hep.data.utils import get_class_weight

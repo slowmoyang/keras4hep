@@ -48,8 +48,10 @@ class DataIterator(object):
             warnings.warn(
                 "cycle mode... length is # of batches per a epoch",
                 Warning)
-        num_batches = int(np.ceil(self._num_examples / self._batch_size))
-        return num_batches
+
+        num_batches = self._num_examples / self._batch_size
+        num_batches = np.floor(num_batches) if self._drop_last else np.ceil(num_batches)
+        return int(num_batches)
 
     def __next__(self):
         batch = self._next()
