@@ -50,30 +50,29 @@ class Directory(object):
         return os.path.join(self._path, name)
 
 
-def get_dataset_paths(dpath):
-    entries = os.listdir(dpath)
+def get_dataset_paths(directory):
+    entries = os.listdir(directory)
     datasets = {}
     for each in entries:
         key, _ = os.path.splitext(each)
-        datasets[key] = os.path.join(dpath, each)
+        datasets[key] = os.path.join(directory, each)
 
     return datasets
 
 
 class Config(object):
-    def __init__(self, dpath, mode="w"):
-        self.path = os.path.join(dpath, "config.json")
-        if self._mode == "w":
+    def __init__(self, directory, mode="w"):
+        self.path = os.path.join(directory, "config.json")
+        if mode == "w":
             self.log = {}
-        elif self._mode == "r":
+        elif mode == "r":
             self.log = self.load(self.path)
             for key, value in self.log.iteritems():
                 setattr(self, key, value)
         else:
-            raise ValueError("Expected 'r' or 'w' but found '{}'".format(self._mode))
+            raise ValueError("Expected 'r' or 'w' but found '{}'".format(mode))
 
-
-    def update(self, data):
+    def append(self, data):
         if isinstance(data, argparse.Namespace):
             data = vars(data)
         self.log.update(data)
@@ -88,17 +87,16 @@ class Config(object):
         return self.log[key]
 
     def save(self):
-        with open(self.path, "w") as f:
-            json.dump(self.log, f, indent=4, sort_keys=True)
+        with open(self.path, "w") as json_file:
+            json.dump(self.log, json_file, indent=4, sort_keys=True)
 
     def load(self, path):
-        log = open(path).read()
+        with open(path) as json_file:
+            log = json_file.read()
         log = json.loads(log)
         log = dict(log)
         return log
 
-    def finish(self):
-        self.save() 
 
 
 def get_available_gpus():
