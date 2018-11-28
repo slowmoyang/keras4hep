@@ -18,11 +18,18 @@ def get_dataset_paths(min_pt):
     else:
         raise NotImplementedError
 
+
     format_str = os.path.join(
         parent_dir,
         "dijet_{min_pt}_{max_pt}/dijet_{min_pt}_{max_pt}_{{}}.root".format(
             min_pt=min_pt, max_pt=max_pt))
 
     paths = {key: format_str.format(key) for key in ["training", "validation", "test"]}
+
+    prep_path = os.path.join(
+        parent_dir,
+        "dijet_{min_pt}_{max_pt}/preprocessing_dijet_{min_pt}_{max_pt}_training.npz".format(
+            min_pt=min_pt, max_pt=max_pt))
+
     paths["preprocessing"] = prep_path
     return paths
