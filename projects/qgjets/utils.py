@@ -55,9 +55,15 @@ def find_best_checkpoint(log_dir):
 
     best["name"] = name
 
-    for each in roc_curve:
-        if parse_str(each, "epoch") == best["epoch"]:
-            best_path = os.path.join(roc_curve_dir, each)
+    ckpt_dir = os.path.join(log_dir, "checkpoint")
+    if not os.path.exists(ckpt_dir):
+        ckpt_dir = os.path.join(log_dir, "model_checkpoint")
+
+    for each in os.listdir(ckpt_dir):
+        name = os.path.splitext(each)[0]
+
+        if parse_str(name, "epoch") == best["epoch"]:
+            best_path = os.path.join(ckpt_dir, each)
             best_path = os.path.abspath(best_path)
             break
 
