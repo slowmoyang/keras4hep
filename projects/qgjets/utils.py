@@ -50,10 +50,19 @@ def find_best_checkpoint(log_dir):
         return None
 
     roc_curve = [os.path.splitext(each)[0] for each in roc_curve]
-    roc_curve = [parse_str(each) for each in roc_curve]
-    best = max(roc_curve, key=lambda each: each["auc"])
+    parsed_roc_curve = [parse_str(each) for each in roc_curve]
+    best = max(parsed_roc_curve, key=lambda each: each["auc"])
 
     best["name"] = name
+
+    for each in roc_curve:
+        if parse_str(each, "epoch") == best["epoch"]:
+            best_path = os.path.join(roc_curve_dir, each)
+            best_path = os.path.abspath(best_path)
+            break
+
+    best["path"] = best_path
+
     return best
 
 
@@ -75,3 +84,5 @@ def get_ranking(logs, write=True):
         df.to_csv(out_path)
 
     return df
+
+
