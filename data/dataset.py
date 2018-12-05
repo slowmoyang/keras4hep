@@ -7,7 +7,7 @@ import collections
 import numpy as np
 
 import ROOT
-from keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 from keras4hep.data.batch import Batch
 
