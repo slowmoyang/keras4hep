@@ -161,7 +161,10 @@ class DataIterator(object):
     @fit_generator_input.setter
     def fit_generator_input(self, input_names):
         if input_names is None:
-            input_names = {"x": ["x"], "y": ["y"]}
+            if hasattr(self._dataset, "fit_generator_input"):
+                input_names = self._dataset.fit_generator_input
+            else:
+                input_names = {"x": ["x"], "y": ["y"]}
         elif isinstance(input_names, dict):
             for key in ["x", "y"]:
                 if not input_names.has_key(key):
