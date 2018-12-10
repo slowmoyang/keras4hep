@@ -7,34 +7,37 @@ import pandas as pd
 
 from keras4hep.utils.misc import parse_str
 
-def get_dataset_paths(min_pt):
+def get_dataset_paths(min_pt, subset_type=None):
     max_pt = int(min_pt * 1.1)
 
     hostname = os.environ["HOSTNAME"]
     if hostname == "cms05.sscc.uos.ac.kr":
-        parent_dir = "/store/slowmoyang/QGJets"
+        parent_dir = "/store/slowmoyang/"
     elif hostname == "gate2":
-        parent_dir = "/home/scratch/slowmoyang/QGJets"
+        parent_dir = "/home/scratch/slowmoyang/"
     elif hostname == "cms-gpu01.sdfarm.kr":
-        parent_dir = "/cms/scratch/slowmoyang/QGJets"
+        parent_dir = "/cms/scratch/slowmoyang/"
     else:
         raise NotImplementedError
 
+    data_dir = os.path.join(parent_dir, "QGJets", "Data")
 
     format_str = os.path.join(
-        parent_dir,
-        "dijet_{min_pt}_{max_pt}/dijet_{min_pt}_{max_pt}_{{}}.root".format(
-            min_pt=min_pt, max_pt=max_pt))
-
-    paths = {key: format_str.format(key) for key in ["training", "validation", "test"]}
+        data_dir,
+        "dijet_{0}_{1}/dijet_{0}_{1}_{{}}.root".format(min_pt, max_pt))
 
     prep_path = os.path.join(
         parent_dir,
-        "dijet_{min_pt}_{max_pt}/preprocessing_dijet_{min_pt}_{max_pt}_training.npz".format(
-            min_pt=min_pt, max_pt=max_pt))
+        "dijet_{0}_{1}/preprocessing_dijet_{0}_{1}_training.npz".format(min_pt, max_pt))
 
-    paths["preprocessing"] = prep_path
-    return paths
+    if subset_type is None:
+        paths = {key: format_str.format(key) for key in ["training", "validation", "test"]}
+        paths["preprocessing"] = prep_path
+        return paths
+    elif subset_type in ["training", "validation", "test"]:
+        return format_str.format(subset_type), prep_path
+    else:
+        raise NotImplementedError
 
 
 def find_best_checkpoint(log_dir):
