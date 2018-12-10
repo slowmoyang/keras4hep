@@ -40,9 +40,9 @@ class Directory(object):
         path = os.path.join(self._path, name)
         setattr(self, name, Directory(path, create=self._create))
 
-    def get_entries(self, full_path=True):
+    def get_entries(self, abspath=True):
         entries = os.listdir(self.path)
-        if full_path:
+        if abspath:
             entries = [os.path.join(self._path, each) for each in entries]
         return entries
 
