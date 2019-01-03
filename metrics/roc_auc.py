@@ -3,8 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-from tensorflow.keras.utils import get_custom_objects
-
+from tensorflow.python.keras.utils.generic_utils import get_custom_objects
 
 def roc_auc(y_true, y_pred):
     y_true_bool = tf.cast(y_true, dtype=tf.bool)

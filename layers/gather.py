@@ -4,7 +4,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 from tensorflow.keras.layers import Layer
-from tensorflow.keras.utils.generic_utils import get_custom_objects
+from tensorflow.python.keras.utils.generic_utils import get_custom_objects
 
 
 class Gather(Layer):
