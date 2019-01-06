@@ -189,11 +189,6 @@ class DataIterator(object):
         if not isinstance(mode, bool):
             raise TypeError
         self._fit_generator_mode = mode
-        if mode:
-            warnings.warn(
-                "fit_generator_mode: cycle=True",
-                Warning)
-            self.cycle = True
 
     @property
     def cycle(self):
