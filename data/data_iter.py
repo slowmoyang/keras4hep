@@ -26,7 +26,7 @@ class DataIterator(object):
         self.batch_size = batch_size
         self.fit_generator_input = fit_generator_input
 
-        self._cycle = cycle or fit_generator_mode
+        self._cycle = cycle
         self._shuffle = shuffle
         self._fit_generator_mode = fit_generator_mode
         self._set_mode_of_next()
