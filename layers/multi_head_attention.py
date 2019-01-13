@@ -1,5 +1,8 @@
 '''
 stolen from https://github.com/tensorflow/models/blob/master/official/transformer/model/attention_layer.py
+
+TODO bias
+TODO cache
 '''
 
 from __future__ import division
