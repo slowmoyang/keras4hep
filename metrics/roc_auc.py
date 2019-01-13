@@ -3,7 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-from tensorflow.python.keras.utils.generic_utils import get_custom_objects
+
 
 def roc_auc(y_true, y_pred):
     y_true_bool = tf.cast(y_true, dtype=tf.bool)
@@ -104,6 +104,3 @@ def _test():
 
     print("Scikit-Learn: {}".format(auc_skl))
     print("TensorFlow: {}".format(auc_tf))
-
-
-get_custom_objects()["roc_auc"] = roc_auc

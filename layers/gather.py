@@ -4,8 +4,6 @@ from __future__ import print_function
 
 import tensorflow as tf
 from tensorflow.keras.layers import Layer
-from tensorflow.python.keras.utils.generic_utils import get_custom_objects
-
 
 class Gather(Layer):
     def __init__(self, **kwargs):
@@ -31,6 +29,3 @@ class Gather(Layer):
         batch_size, _, input_dim = K.int_shape(seq_shape)
 
         return (batch_size, input_dim)
-
-# It returns the global dictionary of names to classes (_GLOBAL_CUSTOM_OBJECTS).
-get_custom_objects()["Gather"] = Gather
