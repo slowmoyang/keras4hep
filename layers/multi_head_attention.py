@@ -9,13 +9,13 @@ from __future__ import division
 
 import tensorflow as tf
 import tensorflow.keras.backend as K
-from tensorflow.keras import layers
+from tensorflow.keras.layers import Layer
 from tensorflow.python.keras import initializers
 from tensorflow.python.keras import regularizers
 from tensorflow.python.keras import constraints
 
 
-class MultiHeadAttention(layers.Layer):
+class MultiHeadAttention(Layer):
 
     def __init__(self,
                  output_dim,
@@ -103,7 +103,7 @@ class MultiHeadAttention(layers.Layer):
         base_config.update({
             'output_dim': self.output_dim,
             'num_heads': self.num_heads,
-            'kernel_initializer': itializers.serialize(self.kernel_initializer),
+            'kernel_initializer': initializers.serialize(self.kernel_initializer),
             'kernel_regularizer': regularizers.serialize(self.kernel_regularizer),
             'kernel_constraint': constraints.serialize(self.kernel_constraint),
         })
