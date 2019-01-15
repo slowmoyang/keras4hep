@@ -5,6 +5,7 @@ from __future__ import print_function
 import os
 import datetime
 import json
+import yaml
 import argparse
 import numpy as np
 import warnings
@@ -13,7 +14,6 @@ import pandas as pd
 import logging
 import sys
 import re
-
 
 import tensorflow.keras.backend as K
 from tensorflow.python.client import device_lib
@@ -72,6 +72,8 @@ class Config(object):
         else:
             raise ValueError("Expected 'r' or 'w' but found '{}'".format(mode))
 
+        self["log_dir"] = directory
+        
     def append(self, data):
         if isinstance(data, argparse.Namespace):
             data = vars(data)
@@ -96,6 +98,12 @@ class Config(object):
         log = json.loads(log)
         log = dict(log)
         return log
+
+    def get_startswith(self, prefix, strip=False):
+        subset = {key: value for key, value in self.log.iteritems() if key.startswith(prefix)}
+        if strip:
+            subset = {key.lstrip(prefix): value for key, value in subset.iteritems()}
+        return subset
 
 
 
@@ -199,3 +207,21 @@ def find_good_checkpoint(directory,
             print("Min {}: {}".format(each, path))
     good_models = list(set(good_models))
     return good_models        
+
+
+def load_yaml(path, key=None):
+    with open(path) as yaml_file:
+        data = yaml.load(yaml_file)
+    if key is None:
+        return data
+    else:
+        return data[key]
+
+def load_json(path, key=None):
+    with open(path) as json_file:
+        data = json.load(json_file)
+
+    if key is None:
+        return data
+    else:
+        return data[key]
