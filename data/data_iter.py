@@ -35,19 +35,15 @@ class DataIterator(object):
 
         self._drop_last = drop_last
 
-
-
         self._num_examples = len(self._dataset)
         self._start = 0
 
 
 
     def __len__(self):
-        # TODO
         if self._cycle:
-            warnings.warn(
-                "cycle mode... length is # of batches per a epoch",
-                Warning)
+            warnings.warn("cycle mode... length is # of batches per a epoch",
+                          Warning)
 
         num_batches = self._num_examples / self._batch_size
         num_batches = np.floor(num_batches) if self._drop_last else np.ceil(num_batches)
