@@ -17,5 +17,5 @@ _LOCAL_CUSTOM_OBJECTS = [
 
 # It returns the global dictionary of names to classes (_GLOBAL_CUSTOM_OBJECTS).
 for each in _LOCAL_CUSTOM_OBJECTS:
-    key = type(each).__name__
-    get_custom_objects()[key] = each
+    name = each.get_name()
+    get_custom_objects()[name] = each

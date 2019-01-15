@@ -136,6 +136,10 @@ class MultiHeadAttention(layers.Layer):
             target_shape = [-1, length, self.output_dim]
             return tf.reshape(tensor=x, shape=target_shape)
 
+    @classmethod
+    def get_name(cls):
+        return cls.__name__
+
 
 class MultiHeadSelfAttention(MultiHeadAttention):
     """Multiheaded self-attention layer."""
@@ -146,18 +150,3 @@ class MultiHeadSelfAttention(MultiHeadAttention):
         return super(MultiHeadSelfAttention, self).call([x] * 3)
 
 
-def test():
-    from tensorflow.keras.models import Sequential
-    from tensorflow.keras.layers import *
-
-    model = Sequential([
-        InputLayer((30, 5)),
-        MultiHeadSelfAttention(output_dim=16, num_heads=4),
-        MultiHeadSelfAttention(output_dim=32, num_heads=4),
-        MultiHeadSelfAttention(output_dim=64, num_heads=4),
-        MultiHeadSelfAttention(output_dim=128, num_heads=4)])
-
-    model.summary()
-
-if __name__ == "__main__":
-    test()

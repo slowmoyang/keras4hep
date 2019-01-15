@@ -29,3 +29,7 @@ class Gather(Layer):
         batch_size, _, input_dim = K.int_shape(seq_shape)
 
         return (batch_size, input_dim)
+
+    @classmethod
+    def get_name(cls):
+        return cls.__name__
