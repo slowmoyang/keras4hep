@@ -14,7 +14,7 @@ def get_dataset_paths(min_pt, subset_type=None):
     if hostname == "cms05.sscc.uos.ac.kr":
         parent_dir = "/store/slowmoyang/"
     elif hostname == "gate2":
-        parent_dir = "/home/scratch/slowmoyang/"
+        parent_dir = '/scratch/slowmoyang/'
     elif hostname == "cms-gpu01.sdfarm.kr":
         parent_dir = "/cms/scratch/slowmoyang/"
     else:
