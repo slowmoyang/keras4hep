@@ -67,11 +67,11 @@ class BaseTreeDataset(object):
 
     def _adjust_seqlen(self, batch):
         # pad or truncating
-        for key, maxlen in self._seq_maxlen.iteritems():
+        for key, (maxlen, dtype) in self._seq_maxlen.iteritems():
             batch[key] = pad_sequences(
                 sequences=batch[key],
                 maxlen=maxlen,
-                dtype=np.float32,
+                dtype=dtype,
                 padding=self._padding,
                 truncating=self._truncating,
                 value=0.0)
