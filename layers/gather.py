@@ -31,5 +31,5 @@ class Gather(Layer):
         return (batch_size, input_dim)
 
     @classmethod
-    def get_name(cls):
+    def get_class_name(cls):
         return cls.__name__

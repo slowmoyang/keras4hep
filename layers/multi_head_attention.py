@@ -137,7 +137,7 @@ class MultiHeadAttention(Layer):
             return tf.reshape(tensor=x, shape=target_shape)
 
     @classmethod
-    def get_name(cls):
+    def get_class_name(cls):
         return cls.__name__
 
 
