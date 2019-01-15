@@ -7,10 +7,10 @@ from keras4hep.metrics import tf_metrics_wrapper
 
 
 _LOCAL_CUSTOM_OBJECTS = [
-    roc_auc,
+    roc_auc
 ]
 
 # It returns the global dictionary of names to classes (_GLOBAL_CUSTOM_OBJECTS).
 for each in _LOCAL_CUSTOM_OBJECTS:
-    key = type(each).__name__
+    key = each.func_name
     get_custom_objects()[key] = each
