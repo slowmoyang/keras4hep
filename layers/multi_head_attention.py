@@ -20,6 +20,8 @@ class MultiHeadAttention(Layer):
     def __init__(self,
                  output_dim,
                  num_heads,
+                 padding_value=0.0,
+                 negative_infinity=-1e9,
                  kernel_initializer='glorot_uniform',
                  kernel_regularizer=None,
                  kernel_constraint=None,
@@ -28,6 +30,9 @@ class MultiHeadAttention(Layer):
 
         self.output_dim = output_dim
         self.num_heads = num_heads
+        self.padding_value = padding_value
+        self.negative_infinity = negative_infinity
+
         self.kernel_initializer = initializers.get(kernel_initializer)
         self.kernel_regularizer = regularizers.get(kernel_regularizer)
         self.kernel_constraint = constraints.get(kernel_constraint)
@@ -84,6 +89,9 @@ class MultiHeadAttention(Layer):
         query *= self.scale_factor
 
         logits = tf.matmul(a=query, b=key, transpose_b=True)
+
+        logits += self.get_bias(value)
+
         weights = tf.nn.softmax(logits)
 
         attention_output = tf.matmul(weights, value)
@@ -103,6 +111,8 @@ class MultiHeadAttention(Layer):
         base_config.update({
             'output_dim': self.output_dim,
             'num_heads': self.num_heads,
+            'negative_infinity': self.negative_infinity,
+            'padding_value': self.padding_value,
             'kernel_initializer': initializers.serialize(self.kernel_initializer),
             'kernel_regularizer': regularizers.serialize(self.kernel_regularizer),
             'kernel_constraint': constraints.serialize(self.kernel_constraint),
@@ -135,6 +145,14 @@ class MultiHeadAttention(Layer):
 
             target_shape = [-1, length, self.output_dim]
             return tf.reshape(tensor=x, shape=target_shape)
+
+    def get_bias(self, x):
+        with tf.name_scope("mask"):
+            is_padding_value = tf.equal(x, self.padding_value)
+            is_padding = tf.reduce_all(is_padding_value, axis=-1, keepdims=True)
+            is_padding = tf.to_float(is_padding)
+            attention_bias = is_padding * self.negative_infinity
+            return attention_bias
 
     @classmethod
     def get_class_name(cls):
