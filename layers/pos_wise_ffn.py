@@ -110,8 +110,7 @@ class PosWiseFFN(Dropout):
         x = tf.expand_dims(x, axis=0)
         # print('x / expand_dims: {}'.format(x.shape))
 
-        output = K.dot(x, self.kernel_filter)
-        output = K.bias_add(output, self.bias_filter)
+        output = K.dot(x, self.kernel_filter) + self.bias_filter
 
         if self.activation is not None:
             output = self.activation(output)
@@ -134,8 +133,7 @@ class PosWiseFFN(Dropout):
 
         # Dense
         # output = tf.einsum('ijk,kl->ijl', output, self.kernel_hidden)
-        output = K.dot(output, self.kernel_hidden)
-        output = output + self.bias_hidden
+        output = K.dot(output, self.kernel_hidden) + self.bias_hidden
         if self.activation is not None:
             output = self.activation(output)
 
