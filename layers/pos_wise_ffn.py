@@ -6,6 +6,7 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
+import tensorflow.keras.backend as K
 from tensorflow.keras.layers import Layer
 from tensorflow.keras.layers import Dropout
 from tensorflow.python.keras import activations
@@ -20,11 +21,12 @@ class PosWiseFFN(Dropout):
                  filter_size,
                  hidden_size,
                  rate,
-                 noise_shape=None,
                  activation='relu',
                  padding_value=0.0,
                  epsilon=1e-6,
-                 kernel_initializer='glorot_uniform_initializer',
+                 noise_shape=None,
+                 seed=None,
+                 kernel_initializer='glorot_uniform',
                  kernel_regularizer=None,
                  kernel_constraint=None,
                  bias_initializer='zeros',
@@ -34,7 +36,8 @@ class PosWiseFFN(Dropout):
 
         self.filter_size = filter_size
         self.hidden_size = hidden_size
-        self.activation = activation.get(activation)
+        self.activation = activations.get(activation)
+        self.padding_value = padding_value
         self.epsilon = epsilon
 
         self.kernel_initializer = initializers.get(kernel_initializer)
@@ -87,7 +90,7 @@ class PosWiseFFN(Dropout):
 
     def call(self, x, training=None):
 
-        batch_size, length, _ = x.shape.as_list()
+        batch_size, length, input_dim = x.shape.as_list()
 
         # NOTE Get padding
         is_padding_value = tf.equal(x, self.padding_value)
@@ -98,11 +101,11 @@ class PosWiseFFN(Dropout):
         non_pad_indices = tf.to_int32(tf.where(pad_mask < self.epsilon))
 
         # Reshape x to [batch_size*length, hidden_size] to remove padding
-        x = tf.reshape(x, [-1, self.hidden_size])
+        x = tf.reshape(x, [-1, input_dim])
         x = tf.gather_nd(x, indices=non_pad_indices)
 
         # Reshape x from 2 dimensions to 3 dimensions.
-        x.set_shape([None, self.hidden_size])            
+        x.set_shape([None, input_dim])
         x = tf.expand_dims(x, axis=0)
 
         #
@@ -113,35 +116,35 @@ class PosWiseFFN(Dropout):
 
         # Dropout
         if 0.0 < self.rate < 1.0:
-            noise_shape = self._get_noise_shape(inputs)
+            noise_shape = self._get_noise_shape(output)
 
             def dropped_inputs():
                 return K.dropout(
-                    x=inputs,
+                    x=output,
                     level=self.rate,
                     noise_shape=noise_shape,
                     seed=self.seed)
 
             output = K.in_train_phase(
                 dropped_inputs,
-                inputs,
+                output,
                 training=training)
 
         # Dense
-        out = K.dot(x, self.kernel_filter) + self.bias_filter
+        output = K.dot(x, self.kernel_hidden) + self.bias_hidden
         if self.activation is not None:
-            out = self.activation(output)
+            output = self.activation(output)
 
         output = tf.squeeze(output, axis=0)
 
-        scatter_shape = (batch_size * length, self.hidden_size)
+        scatter_shape = (-1, self.hidden_size)
         output = tf.scatter_nd(
             indices=non_pad_indices,
             updates=output,
             shape=scatter_shape)
 
-        out_shape = (batch_size, length, self.hidden_size)
-        output = tf.reshape(out, out_shape)
+        out_shape = (-1, length, self.hidden_size)
+        output = tf.reshape(output, out_shape)
 
         return output
 
@@ -155,7 +158,7 @@ class PosWiseFFN(Dropout):
         config = {
             'filter_size': self.filter_size,
             'hidden_size': self.hidden_size,
-            'activation': activation.serialize(self.activation),
+            'activation': activations.serialize(self.activation),
             'padding_value': self.padding_value,
             'epsilon': self.epsilon,
             'kernel_initializer': initializers.serialize(self.kernel_initializer),
@@ -177,8 +180,12 @@ class PosWiseFFN(Dropout):
 
 def main():
     from tensorflow.keras.layers import Input
+    from tensorflow.keras.models import Model
     x = Input((30, 8))
-    h = PosWiseFFN(filter_size=128, hidden_size=32)(x)
+    h = PosWiseFFN(filter_size=128, hidden_size=32, rate=0.6)(x)
+
+    model = Model(x, h)
+    model.summary()
 
 
 if __name__ == '__main__':
