@@ -101,8 +101,8 @@ class QGJetsExperiment(object):
 
         self.config = config
 
-    def backup_script(self, scripts=[]):
-        for each in scripts:
+    def backup_script(self, script):
+        for each in script:
             shutil.copy2(each, self.log_dir.script.path)
 
     def get_dataset(self):
