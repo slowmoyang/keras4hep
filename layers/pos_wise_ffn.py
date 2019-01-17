@@ -59,11 +59,11 @@ class PosWiseFFN(Dropout):
         input_dim = input_shape[-1].value
 
         loop_seq = [
-            ('filter', self.filter_size),
-            ('hidden', self.hidden_size)
+            ('filter', input_shape[-1].value, self.filter_size),
+            ('hidden', self.filter_size, self.hidden_size)
         ]
 
-        for suffix, output_dim in loop_seq: 
+        for suffix, input_dim, output_dim in loop_seq: 
             kernel_name = 'kernel_' + suffix
             kernel_shape = (input_dim, output_dim)
 
@@ -76,7 +76,7 @@ class PosWiseFFN(Dropout):
             setattr(self, kernel_name, kernel)
 
             bias_name = 'bias_' + suffix
-            bias_shape = (output_dim, )
+            bias_shape = [output_dim]
 
             bias = self.add_weight(
                 name=bias_name,
@@ -94,6 +94,7 @@ class PosWiseFFN(Dropout):
 
         # NOTE Get padding
         is_padding_value = tf.equal(x, self.padding_value)
+
         is_padding = tf.reduce_all(is_padding_value, axis=-1, keepdims=True)
         is_padding = tf.to_float(is_padding)
 
@@ -107,9 +108,10 @@ class PosWiseFFN(Dropout):
         # Reshape x from 2 dimensions to 3 dimensions.
         x.set_shape([None, input_dim])
         x = tf.expand_dims(x, axis=0)
+        # print('x / expand_dims: {}'.format(x.shape))
 
-        #
-        output = K.dot(x, self.kernel_filter) + self.bias_filter
+        output = K.dot(x, self.kernel_filter)
+        output = K.bias_add(output, self.bias_filter)
 
         if self.activation is not None:
             output = self.activation(output)
@@ -131,7 +133,9 @@ class PosWiseFFN(Dropout):
                 training=training)
 
         # Dense
-        output = K.dot(output, self.kernel_hidden) + self.bias_hidden
+        # output = tf.einsum('ijk,kl->ijl', output, self.kernel_hidden)
+        output = K.dot(output, self.kernel_hidden)
+        output = output + self.bias_hidden
         if self.activation is not None:
             output = self.activation(output)
 
