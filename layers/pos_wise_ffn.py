@@ -131,7 +131,7 @@ class PosWiseFFN(Dropout):
                 training=training)
 
         # Dense
-        output = K.dot(x, self.kernel_hidden) + self.bias_hidden
+        output = K.dot(output, self.kernel_hidden) + self.bias_hidden
         if self.activation is not None:
             output = self.activation(output)
 
