@@ -8,6 +8,7 @@ from keras4hep.layers.gather import Gather
 from keras4hep.layers.multi_head_attention import MultiHeadAttention
 from keras4hep.layers.multi_head_attention import MultiHeadSelfAttention
 from keras4hep.layers.layer_normalization import LayerNormalization
+from keras4hep.layers.pos_wise_ffn import PosWiseFFN
 
 
 _LOCAL_CUSTOM_OBJECTS = [
@@ -15,6 +16,7 @@ _LOCAL_CUSTOM_OBJECTS = [
     MultiHeadAttention,
     MultiHeadSelfAttention,
     LayerNormalization,
+    PosWiseFFN,
 ]
 
 # It returns the global dictionary of names to classes (_GLOBAL_CUSTOM_OBJECTS).
