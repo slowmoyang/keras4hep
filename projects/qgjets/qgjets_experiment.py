@@ -220,19 +220,26 @@ class QGJetsExperiment(object):
             shuffle=True,
             class_weight=self.class_weight)
 
-    def evaluate(self, filepath, custom_objects=None):
+    def evaluate(self, model, custom_objects=None, **kwargs):
         '''
         evaluate
         '''
-        model = tf.keras.models.load_model(
-            filepath=filepath,
-            custom_objects=custom_objects)
+        name = kwargs['name'] if kwargs.has_key('name') else 'model'
+        title = kwargs['title'] if kwargs.has_key('title') else 'QGJets'
 
-        ckpt_name = os.path.basename(filepath).replace(".hdf5", "")
-        epoch = kh.utils.misc.parse_str(ckpt_name, target="epoch")
-        name = "model_epoch-{:02d}".format(epoch)
+        if isinstance(model, str):
+            filepath = model
+            del model
 
-        title = "Epoch {}".format(epoch)
+            model = tf.keras.models.load_model(
+                filepath=filepath,
+                custom_objects=custom_objects)
+
+            ckpt_name = os.path.basename(filepath).replace(".hdf5", "")
+            epoch = kh.utils.misc.parse_str(ckpt_name, target="epoch")
+            name += "_epoch-{:02d}".format(epoch)
+            title += " Epoch {}".format(epoch)
+
 
         roc_curve = ROCCurve(
             name=name,
